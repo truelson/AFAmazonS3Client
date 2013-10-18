@@ -225,6 +225,15 @@
                      success:(void (^)(id responseObject))success
                      failure:(void (^)(NSError *error))failure;
 
+
+- (AFHTTPRequestOperation*)setObjectOperationWithMethod:(NSString *)method
+                                                   file:(NSString *)filePath
+                                        destinationPath:(NSString *)destinationPath
+                                             parameters:(NSDictionary *)parameters
+                                               progress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))progress
+                                                success:(void (^)(id responseObject))success
+                                                failure:(void (^)(NSError *error))failure;
+
 @end
 
 ///----------------

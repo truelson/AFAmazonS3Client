@@ -360,29 +360,26 @@ NSString * AFBase64EncodedStringFromData(NSData *data) {
     [self enqueueS3RequestOperationWithMethod:@"DELETE" path:path parameters:nil success:success failure:failure];
 }
 
-- (void)setObjectWithMethod:(NSString *)method
-                       file:(NSString *)filePath
-            destinationPath:(NSString *)destinationPath
-                 parameters:(NSDictionary *)parameters
-                   progress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))progress
-                    success:(void (^)(id responseObject))success
-                    failure:(void (^)(NSError *error))failure
+- (AFHTTPRequestOperation*)setObjectOperationWithMethod:(NSString *)method
+                                                   file:(NSString *)filePath
+                                        destinationPath:(NSString *)destinationPath
+                                             parameters:(NSDictionary *)parameters
+                                               progress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))progress
+                                                success:(void (^)(id responseObject))success
+                                                failure:(void (^)(NSError *error))failure
 {
     NSMutableURLRequest *fileRequest = [NSMutableURLRequest requestWithURL:[NSURL fileURLWithPath:filePath]];
     [fileRequest setCachePolicy:NSURLCacheStorageNotAllowed];
-	
+
     NSURLResponse *response = nil;
     NSError *fileError = nil;
     NSData *data = [NSURLConnection sendSynchronousRequest:fileRequest returningResponse:&response error:&fileError];
-	
+
     if (data && response) {
-        NSMutableURLRequest *request = [self multipartFormRequestWithMethod:method path:destinationPath parameters:parameters constructingBodyWithBlock:^(id <AFMultipartFormData> formData) {
-            if (![parameters valueForKey:@"key"]) {
-                [formData appendPartWithFormData:[[filePath lastPathComponent] dataUsingEncoding:NSUTF8StringEncoding] name:@"key"];
-            }
-            [formData appendPartWithFileData:data name:@"file" fileName:[filePath lastPathComponent] mimeType:[response MIMEType]];
-        }];
-		
+        NSMutableURLRequest *request = [super requestWithMethod:method path:destinationPath parameters:parameters];
+        [self authorizeRequest:request];
+        [request setHTTPBody:data];
+
         AFHTTPRequestOperation *requestOperation = [self HTTPRequestOperationWithRequest:request success:^(AFHTTPRequestOperation *operation, id responseObject) {
             if (success) {
                 success(responseObject);
@@ -392,10 +389,10 @@ NSString * AFBase64EncodedStringFromData(NSData *data) {
                 failure(error);
             }
         }];
-		
+
         [requestOperation setUploadProgressBlock:progress];
-		
-        [self enqueueHTTPRequestOperation:requestOperation];
+
+        return requestOperation;
     }
 }
 
