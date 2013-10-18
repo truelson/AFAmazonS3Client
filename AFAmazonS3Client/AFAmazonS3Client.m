@@ -432,6 +432,7 @@ NSString * AFBase64EncodedStringFromData(NSData *data) {
 
         return requestOperation;
     }
+    return nil;
 }
 
 #pragma mark - AFHTTPClient
